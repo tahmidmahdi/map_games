@@ -4,13 +4,14 @@ import {
   Marker,
   Polyline,
 } from "@react-google-maps/api";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import "./App.scss";
+import MapsData from "./components/MapsData/MapsData";
+import RefreshPage from "./components/RefreshPage/RefreshPage";
 import mapDistance from "./Helper/distanceCalculator";
 import { CityInterface } from "./Lib/mapData";
-import randomCityGenerate from "./Lib/randomCity";
 
-interface LatLngInterface {
+export interface LatLngInterface {
   lat: number;
   lng: number;
 }
@@ -24,15 +25,22 @@ const center = {
 };
 
 const App: React.FC = () => {
+  // useState hooks
   const [totalDistance, setTotalDistance] = useState<number>(1500);
+  const [rightGuess, setRightGuess] = useState<number>(0);
   const [latLng, setLatLng] = useState<LatLngInterface>();
-  const [occupiedDistance, setOccupiedDistance] = useState(0);
-  const [cityGenerate, setCityGenerate] = useState<CityInterface>(
-    randomCityGenerate(),
-  );
+  const [occupiedDistance, setOccupiedDistance] = useState<number>(0);
+  // const [counter, setCounter] = useState(10);
+  const [cityGenerate, setCityGenerate] = useState<CityInterface>({
+    name: "",
+    position: { lat: 0, lng: 0 },
+  });
 
+  // required Env(s)
   const credentials = process.env.REACT_APP_MAPS_API;
 
+  // variables
+  // to defines the paths
   const path = [
     { lat: latLng?.lat as number, lng: latLng?.lng as number },
     {
@@ -41,6 +49,7 @@ const App: React.FC = () => {
     },
   ];
 
+  // properties of tow points
   const options = {
     strokeColor: "#FF0000",
     strokeOpacity: 0.8,
@@ -55,21 +64,44 @@ const App: React.FC = () => {
     zIndex: 1,
   };
 
+  const setData = useCallback(() => {
+    if (
+      totalDistance &&
+      totalDistance >= occupiedDistance &&
+      totalDistance !== 0
+    ) {
+      setTotalDistance(totalDistance - occupiedDistance);
+      if (occupiedDistance <= 50 && occupiedDistance !== 0) {
+        setRightGuess(rightGuess + 1);
+      }
+    } else {
+      setTotalDistance(0);
+    }
+  }, [occupiedDistance]);
+
+  // useEffect hooks
   useEffect(() => {
     if (
-      latLng?.lat &&
-      latLng?.lng &&
-      cityGenerate.position.lat &&
-      cityGenerate.position.lng
+      latLng?.lat !== 0 &&
+      latLng?.lng !== 0 &&
+      cityGenerate.position.lat !== 0 &&
+      cityGenerate.position.lng !== 0
     ) {
-      setOccupiedDistance(
-        mapDistance(
-          latLng?.lat,
-          latLng?.lng,
-          cityGenerate.position.lat,
-          cityGenerate.position.lng,
-        ),
-      );
+      if (
+        latLng?.lat &&
+        latLng?.lng &&
+        cityGenerate.position.lat &&
+        cityGenerate.position.lng
+      ) {
+        setOccupiedDistance(
+          mapDistance(
+            latLng?.lat,
+            latLng?.lng,
+            cityGenerate.position.lat,
+            cityGenerate.position.lng,
+          ),
+        );
+      }
     }
   }, [
     latLng?.lat,
@@ -79,24 +111,19 @@ const App: React.FC = () => {
   ]);
 
   useEffect(() => {
-    if (totalDistance >= occupiedDistance && totalDistance !== 0) {
-      setTotalDistance(totalDistance - occupiedDistance);
-    } else {
-      setTotalDistance(0);
+    if (occupiedDistance) {
+      setData();
     }
-  }, [occupiedDistance]);
+  }, [occupiedDistance, setData]);
 
   useEffect(() => {
-    if (totalDistance > 0) {
-      setTimeout(() => {
-        setLatLng({ lat: 0, lng: 0 });
-        setCityGenerate(randomCityGenerate());
-      }, 10000);
+    if (cityGenerate.position.lat === 0 && cityGenerate.position.lng === 0) {
+      setLatLng({ lat: 0, lng: 0 });
     }
-  }, [setCityGenerate, cityGenerate, totalDistance]);
+  }, [cityGenerate.position.lat, cityGenerate.position.lng]);
 
   return (
-    <div className="app_component">
+    <main className="app_component">
       {totalDistance > 0 ? (
         <div>
           <LoadScript googleMapsApiKey={credentials || ""} language="EN">
@@ -106,43 +133,44 @@ const App: React.FC = () => {
               center={center}
               zoom={4}
               clickableIcons={false}
-              onDblClick={(e) =>
+              onClick={(e) =>
                 setLatLng({ lat: e?.latLng!.lat(), lng: e.latLng!.lng() })
               }
             >
-              {/* Child components, such as markers, info windows, etc. */}
-              {latLng?.lat && latLng?.lng && (
-                <Marker
-                  position={{ lat: latLng?.lat || 0, lng: latLng?.lng || 0 }}
-                />
-              )}
-              {latLng?.lat && latLng?.lng && (
-                <Marker
-                  position={{
-                    lat: cityGenerate.position.lat,
-                    lng: cityGenerate.position.lng,
-                  }}
-                />
-              )}
-              {latLng?.lat && latLng?.lng && (
-                <Polyline path={path} options={options} />
-              )}
+              {latLng?.lat !== 0 &&
+                latLng?.lng !== 0 &&
+                cityGenerate.position.lat !== 0 &&
+                cityGenerate.position.lng !== 0 && (
+                  <>
+                    <Marker
+                      position={{
+                        lat: latLng?.lat || 0,
+                        lng: latLng?.lng || 0,
+                      }}
+                    />
+                    <Marker
+                      position={{
+                        lat: cityGenerate.position.lat,
+                        lng: cityGenerate.position.lng,
+                      }}
+                    />
+                    <Polyline path={path} options={options} />
+                  </>
+                )}
             </GoogleMap>
           </LoadScript>
 
-          <div className="distance_container">
-            <div>
-              <h1>Total KM left {totalDistance}</h1>
-            </div>
-            <div>
-              <h1>Find {cityGenerate?.name}</h1>
-            </div>
-          </div>
+          <MapsData
+            cityGenerate={cityGenerate}
+            setCityGenerate={setCityGenerate}
+            totalDistance={totalDistance}
+            rightGuess={rightGuess}
+          />
         </div>
       ) : (
-        <p>No data</p>
+        <RefreshPage rightGuess={rightGuess} />
       )}
-    </div>
+    </main>
   );
 };
 

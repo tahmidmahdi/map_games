@@ -1,3 +1,4 @@
+// To calculate distance between two points using Latitude and Longitude
 const mapDistance = (
   lat_marker: number,
   lng_marker: number,

@@ -9,4 +9,41 @@
       font-size: 25px;
     }
   }
+
+  .refreshPage {
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+
+  .refreshPage,
+  .maps-data-button {
+    button {
+      border: transparent;
+      background: transparent;
+      height: 50px;
+      width: 200px;
+      background-color: #0d6efd;
+      color: #fff;
+      border-radius: 10px;
+      font-weight: bold;
+
+      &:hover {
+        cursor: pointer;
+      }
+    }
+  }
+
+  .maps-data-button {
+    button {
+      margin: 0 10px;
+    }
+
+    .danger {
+      background-color: #dc3545;
+    }
+  }
 }
