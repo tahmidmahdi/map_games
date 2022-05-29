@@ -17,7 +17,7 @@ export interface LatLngInterface {
 }
 const containerStyle = {
   width: "100%",
-  height: "700px",
+  height: "600px",
 };
 const center = {
   lat: 54.526,
@@ -174,4 +174,4 @@ const App: React.FC = () => {
   );
 };
 
-export default React.memo(App);
+export default App;

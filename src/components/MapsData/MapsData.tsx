@@ -8,14 +8,14 @@ const MapsData: React.FC<{
   rightGuess: number;
   setCityGenerate: React.Dispatch<React.SetStateAction<CityInterface>>;
 }> = ({ cityGenerate, totalDistance, rightGuess, setCityGenerate }) => {
-  const eventHandler = () => {
-    setCityGenerate(randomCityGenerate);
-  };
-  const eventClearHandler = () => {
+  const eventClearHandler = (): void => {
     setCityGenerate({
       name: "",
       position: { lat: 0, lng: 0 },
     });
+  };
+  const eventHandler = (): void => {
+    setCityGenerate(randomCityGenerate);
   };
 
   return (
